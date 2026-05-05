@@ -114,5 +114,16 @@
     "param_mappings": {
       "max_completion_tokens": "max_tokens"
     }
+  },
+  "tera": {
+    "base_url": "https://api.tera.gw/v1",
+    "api_key_env": "TERA_API_KEY",
+    "api_base_env": "TERA_API_BASE",
+    "headers": {
+      "User-Agent": "LiteLLM-Tera/1.0"
+    },
+    "param_mappings": {
+      "max_completion_tokens": "max_tokens"
+    }
   }
 }

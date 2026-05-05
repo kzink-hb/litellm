@@ -71,6 +71,19 @@ def test_get_llm_provider_deepseek_custom_api_base():
     os.environ.pop("DEEPSEEK_API_BASE")
 
 
+def test_get_llm_provider_tera():
+    with patch.dict(os.environ, {}, clear=True):
+        model, custom_llm_provider, dynamic_api_key, api_base = (
+            litellm.get_llm_provider(
+                model="tera/openai/gpt-oss-20b",
+            )
+        )
+
+    assert custom_llm_provider == "tera"
+    assert model == "openai/gpt-oss-20b"
+    assert api_base == "https://api.tera.gw/v1"
+
+
 def test_get_llm_provider_vertex_ai_image_models():
     model, custom_llm_provider, dynamic_api_key, api_base = litellm.get_llm_provider(
         model="imagegeneration@006", custom_llm_provider=None
@@ -477,4 +490,3 @@ def test_get_llm_provider_use_proxy_arg_true_with_direct_args():
     assert provider == "litellm_proxy"
     assert key == arg_api_key  # Should use the argument key
     assert base == arg_api_base  # Should use the argument base
-

@@ -27076,6 +27076,36 @@
         "supports_response_schema": true,
         "supports_tool_choice": true
     },
+    "openai/gpt-oss-20b": {
+        "input_cost_per_token": 7.5e-07,
+        "litellm_provider": "openai",
+        "max_input_tokens": 131072,
+        "max_output_tokens": 4096,
+        "max_tokens": 4096,
+        "mode": "chat",
+        "output_cost_per_token": 4e-06,
+        "supports_function_calling": true,
+        "supports_parallel_function_calling": true,
+        "supports_reasoning": true,
+        "supports_response_schema": true,
+        "supports_system_messages": true,
+        "supports_tool_choice": true
+    },
+    "tera/openai/gpt-oss-20b": {
+        "input_cost_per_token": 7.5e-07,
+        "litellm_provider": "tera",
+        "max_input_tokens": 131072,
+        "max_output_tokens": 4096,
+        "max_tokens": 4096,
+        "mode": "chat",
+        "output_cost_per_token": 4e-06,
+        "supports_function_calling": true,
+        "supports_parallel_function_calling": true,
+        "supports_reasoning": true,
+        "supports_response_schema": true,
+        "supports_system_messages": true,
+        "supports_tool_choice": true
+    },
     "openrouter/openai/o1": {
         "cache_read_input_token_cost": 7.5e-06,
         "input_cost_per_token": 1.5e-05,
