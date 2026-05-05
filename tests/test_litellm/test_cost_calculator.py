@@ -1,5 +1,7 @@
+import json
 import os
 import sys
+from pathlib import Path
 
 import pytest
 
@@ -19,6 +21,16 @@ from litellm.cost_calculator import (
 from litellm.types.llms.openai import OpenAIRealtimeStreamList
 from litellm.types.utils import ModelResponse, PromptTokensDetailsWrapper, Usage
 from litellm.utils import TranscriptionResponse
+
+
+def _load_repo_model_cost_map():
+    model_cost_path = (
+        Path(__file__).resolve().parents[2] / "model_prices_and_context_window.json"
+    )
+    with model_cost_path.open() as f:
+        litellm.model_cost = json.load(f)
+    litellm.get_model_info.cache_clear()
+    litellm.add_known_models(litellm.model_cost)
 
 
 def test_completion_cost_uses_response_model_for_dynamic_routing():
@@ -108,6 +120,55 @@ def test_wandb_model_api_pricing_entries():
         assert model_info["litellm_provider"] == "wandb"
         assert model_info["input_cost_per_token"] == input_cost
         assert model_info["output_cost_per_token"] == output_cost
+
+
+def test_tera_gpt_oss_20b_model_info_entry():
+    _load_repo_model_cost_map()
+
+    model_name = "tera/openai/gpt-oss-20b"
+    model_info = litellm.get_model_info(model_name)
+    raw_model_info = litellm.model_cost[model_name]
+
+    assert model_info["key"] == model_name
+    assert model_info["litellm_provider"] == "tera"
+    assert model_info["mode"] == "chat"
+    assert model_info["max_input_tokens"] == 131072
+    assert model_info["max_output_tokens"] == 4096
+    assert model_info["max_tokens"] == 4096
+    assert model_info["input_cost_per_token"] == 7.5e-07
+    assert model_info["output_cost_per_token"] == 4e-06
+    assert model_info["supports_function_calling"] is True
+    assert model_info["supports_response_schema"] is True
+    assert model_info["supports_reasoning"] is True
+    assert model_info["supports_system_messages"] is True
+    assert model_info["supports_tool_choice"] is True
+    assert raw_model_info["supports_parallel_function_calling"] is True
+    assert model_name in litellm.tera_models
+
+
+def test_openai_gpt_oss_20b_cost_lookup_entry():
+    _load_repo_model_cost_map()
+
+    model_name = "openai/gpt-oss-20b"
+    model_info = litellm.get_model_info(model_name)
+
+    assert model_info["key"] == model_name
+    assert model_info["litellm_provider"] == "openai"
+    assert model_info["max_input_tokens"] == 131072
+    assert model_info["max_output_tokens"] == 4096
+    assert model_info["input_cost_per_token"] == 7.5e-07
+    assert model_info["output_cost_per_token"] == 4e-06
+
+    response = ModelResponse(
+        id="test-id",
+        model=model_name,
+        choices=[],
+        usage=Usage(prompt_tokens=1000, completion_tokens=100, total_tokens=1100),
+    )
+
+    cost = completion_cost(completion_response=response, model=model_name)
+
+    assert cost == pytest.approx((1000 * 7.5e-07) + (100 * 4e-06))
 
 
 def test_cost_calculator_with_usage(monkeypatch):

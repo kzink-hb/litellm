@@ -37,6 +37,20 @@ class TestJSONProviderLoader:
         assert publicai.api_base_env == "PUBLICAI_API_BASE"
         assert publicai.param_mappings.get("max_completion_tokens") == "max_tokens"
 
+    def test_load_tera_json_provider(self):
+        """Test that Tera provider config loads from JSON"""
+        from litellm.llms.openai_like.json_loader import JSONProviderRegistry
+
+        assert JSONProviderRegistry.exists("tera")
+
+        tera = JSONProviderRegistry.get("tera")
+        assert tera is not None
+        assert tera.base_url == "https://api.tera.gw/v1"
+        assert tera.api_key_env == "TERA_API_KEY"
+        assert tera.api_base_env == "TERA_API_BASE"
+        assert tera.headers == {"User-Agent": "LiteLLM-Tera/1.0"}
+        assert tera.param_mappings.get("max_completion_tokens") == "max_tokens"
+
     def test_dynamic_config_generation(self):
         """Test dynamic config class creation"""
         from litellm.llms.openai_like.dynamic_config import create_config_class
@@ -162,6 +176,24 @@ class TestJSONProviderLoader:
         assert provider == "publicai"
         assert api_base == "https://api.publicai.co/v1"
 
+    def test_tera_provider_resolution(self):
+        """Test that provider resolution finds Tera JSON provider"""
+        from litellm.litellm_core_utils.get_llm_provider_logic import (
+            get_llm_provider,
+        )
+
+        with patch.dict(os.environ, {}, clear=True):
+            model, provider, api_key, api_base = get_llm_provider(
+                model="tera/openai/gpt-oss-20b",
+                custom_llm_provider=None,
+                api_base=None,
+                api_key=None,
+            )
+
+        assert model == "openai/gpt-oss-20b"
+        assert provider == "tera"
+        assert api_base == "https://api.tera.gw/v1"
+
     def test_provider_config_manager(self):
         """Test that ProviderConfigManager returns JSON-based configs"""
         from litellm import LlmProviders
@@ -173,6 +205,18 @@ class TestJSONProviderLoader:
 
         assert config is not None
         assert config.custom_llm_provider == "publicai"
+
+    def test_tera_provider_config_manager(self):
+        """Test that ProviderConfigManager returns Tera JSON-based config"""
+        from litellm import LlmProviders
+        from litellm.utils import ProviderConfigManager
+
+        config = ProviderConfigManager.get_provider_chat_config(
+            model="openai/gpt-oss-20b", provider=LlmProviders.TERA
+        )
+
+        assert config is not None
+        assert config.custom_llm_provider == "tera"
 
 
 class TestPublicAIIntegration:

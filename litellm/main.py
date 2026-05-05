@@ -1483,6 +1483,20 @@ def completion(  # type: ignore # noqa: PLR0915
 
         if dynamic_api_key is not None:
             api_key = dynamic_api_key
+
+        if custom_llm_provider is not None and JSONProviderRegistry.exists(
+            custom_llm_provider
+        ):
+            json_provider_config = JSONProviderRegistry.get(custom_llm_provider)
+            if json_provider_config is not None and json_provider_config.headers:
+                existing_header_keys = {header_key.lower() for header_key in headers}
+                for header_key, header_value in json_provider_config.headers.items():
+                    if header_key.lower() in existing_header_keys:
+                        continue
+                    if isinstance(header_value, str):
+                        header_value = header_value.replace("{api_key}", api_key or "")
+                    headers[header_key] = header_value
+                    existing_header_keys.add(header_key.lower())
         # check if user passed in any of the OpenAI optional params
         optional_param_args = {
             "functions": functions,
