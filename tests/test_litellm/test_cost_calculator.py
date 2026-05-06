@@ -171,6 +171,29 @@ def test_openai_gpt_oss_20b_cost_lookup_entry():
     assert cost == pytest.approx((1000 * 7.5e-07) + (100 * 4e-06))
 
 
+def test_litellm_proxy_gpt_oss_20b_cost_lookup_entry():
+    _load_repo_model_cost_map()
+
+    model_name = "litellm_proxy/openai/gpt-oss-20b"
+    model_info = litellm.get_model_info(model_name)
+
+    assert model_info["key"] == model_name
+    assert model_info["litellm_provider"] == "litellm_proxy"
+    assert model_info["input_cost_per_token"] == 7.5e-07
+    assert model_info["output_cost_per_token"] == 4e-06
+
+    response = ModelResponse(
+        id="test-id",
+        model=model_name,
+        choices=[],
+        usage=Usage(prompt_tokens=1000, completion_tokens=100, total_tokens=1100),
+    )
+
+    cost = completion_cost(completion_response=response)
+
+    assert cost == pytest.approx((1000 * 7.5e-07) + (100 * 4e-06))
+
+
 def test_cost_calculator_with_usage(monkeypatch):
     os.environ["LITELLM_LOCAL_MODEL_COST_MAP"] = "True"
     litellm.model_cost = litellm.get_model_cost_map(url="")
